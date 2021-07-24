@@ -4,6 +4,8 @@ var endTime = "5:00 PM";     //1800 hours or 5PM
 var timeRange = 0;
 var schedule = [];
 var scheduleEl = $('#schedule');
+var oneHour = 1000 * 60 * 60;
+var timeout = 0;
 
 // Output today's day and date to header
 function outputToday() {
@@ -76,12 +78,19 @@ function loadSchedule() {
     }
 }
 
+function timeToNextHour() {
+    var tempTime = currDay.clone();
+    tempTime.add(1, 'hours').startOf('hour');
+    timeout = tempTime.diff(currDay) % oneHour;   // Set timeout to milliseconds to the next hour
+}
+
 function clearPage() {
     scheduleEl.html("");
 }
 
 function renderPage() {
     clearPage();
+    timeToNextHour();
     outputToday();
     outputSchedule();
 
@@ -95,7 +104,7 @@ function renderPage() {
         saveSchedule();
     });
 
-    setTimeout(renderPage, 1000 * 60 * 5);     //Update time every 5 mins.
+    setTimeout(renderPage, timeout);     // Update the schedule on the hour.
 };
 
 $(document).ready(function() {      // Do this stuff when document has finished loading
