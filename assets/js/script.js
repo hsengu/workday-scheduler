@@ -3,29 +3,35 @@ var startTime = "9:00 AM";    //0900 hours or 9AM
 var endTime = "5:00 PM";     //1800 hours or 5PM
 var timeRange = 0;
 var schedule = [];
+var scheduleEl = $('#schedule');
 
+// Output today's day and date to header
 function outputToday() {
     var currDayEl = $("#currentDay");
     currDayEl.text("Today is " + currDay.format('dddd') + ", " + currDay.format("MMMM Do") + ", " + currDay.format("YYYY"));
 }
 
+// Output Schedule to page
 function outputSchedule() {
-    loadSchedule();
-    var scheduleEl = $('#schedule');
+    loadSchedule();     // Check if a schedule already exists
     var currHour = parseInt(currDay.format("H"), 10);
     var timeRel = "";
     var textDisabled = " disabled ";
 
+    // Build Scheduler for the day.
     for(var i = 0; i < schedule.length; i++) {
         var tempTime = moment(startTime, "hh:mm A");
         var tempHour = parseInt(tempTime.add(i, 'hours').format("H"), 10);
-        if(tempHour < currHour)
+
+        if(tempHour < currHour)             // Compares hourly schedule with current time
             timeRel = "past";
         else if(tempHour === currHour) {
             timeRel = "present";
             textDisabled = " ";
         } else
             timeRel = "future";
+        
+        // Build row elements
         var rowEl = $("<div class='row time-block " + timeRel + "'>");
         var timeEl = $("<div class='col-lg-1 col-2 hour'>")
         timeEl.html("<b>" + schedule[i].time + "</b>");
@@ -46,19 +52,20 @@ function timeDiff(start, end) {
     start = moment(start, "hh:mm A");
     end = moment(end, "hh:mm A");
 
-    return Math.abs(start.diff(end, 'hours'));
+    return Math.abs(start.diff(end, 'hours'));      // Return time difference between start and end times.
 }
 
 function saveSchedule() {
-    localStorage.setItem('schedule', JSON.stringify(schedule));
+    localStorage.setItem('schedule', JSON.stringify(schedule));     // Save schedule array to localStorage
 }
 
 function loadSchedule() {
-    timeRange = timeDiff(startTime, endTime);
-    schedule = localStorage.getItem('schedule');
-    if(schedule) {
+    timeRange = timeDiff(startTime, endTime);           // Get business hours
+    schedule = localStorage.getItem('schedule');        // Get data from localStorage
+    
+    if(schedule) {                          // Check if data is present
         schedule = JSON.parse(schedule);
-    } else {
+    } else {                                // Data is not present, build an empty schedule
         schedule = [];
         for(var i = 0; i <= timeRange; i++) {
             var tempTime = moment(startTime, "hh:mm A");
@@ -66,19 +73,31 @@ function loadSchedule() {
             var tempTaskObj = { time: tempTime.format("hh:mm A"), task: "" };
             schedule.push(tempTaskObj);
         }
-        console.log(schedule);
     }
 }
 
-outputToday();
-outputSchedule();
+function clearPage() {
+    scheduleEl.html("");
+}
 
-$('.saveBtn').click(function() {
-    var tempTime = $(this).siblings()[0].innerText;
-    var tempTask = $(this).siblings()[1].value;
-    var tempIndex = schedule.findIndex(find => tempTime === find.time);
+function renderPage() {
+    clearPage();
+    outputToday();
+    outputSchedule();
 
-    schedule[tempIndex].task = tempTask;
+    $('.saveBtn').click(function() {
+        var tempTime = $(this).siblings()[0].innerText;
+        var tempTask = $(this).siblings()[1].value;
+        var tempIndex = schedule.findIndex(find => tempTime === find.time);
+    
+        schedule[tempIndex].task = tempTask;
+    
+        saveSchedule();
+    });
 
-    saveSchedule();
+    setTimeout(renderPage, 1000 * 60 * 5);     //Update time every 5 mins.
+};
+
+$(document).ready(function() {      // Do this stuff when document has finished loading
+    renderPage();
 });
